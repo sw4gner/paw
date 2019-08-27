@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+   <meta charset="utf-8">
+   <title>Ergebnis</title>
+   
+   <meta name="description" content="Ergebnis der Umfrage {{umfId}}}">
+   <meta name="viewport" content="width=device-width, initial-scale=1">
+   
+   <style type="text/css"></style>
+
+</head>
+<body>
+
+	<table style="width:100%">
+		
+		<tr>
+			<th COLSPAN=2>{{qst}}</th>
+		</tr>
+		<tr>
+			<th>Ja</th>
+			<th>Nein</th> 
+		</tr>
+		{% for rs in rss %}
+			<tr>
+				<td>{{rs.y}}</td>
+				<td>{{rs.n}}</td> 
+			</tr>
+		{% endfor %}
+		
+		<tr>
+			<td> {{SUM_Y}}</td>
+			<td>{{SUM_N}}</td> 
+		</tr>
+	</table>
+</body>
+
+</html>

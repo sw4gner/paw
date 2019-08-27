@@ -8,25 +8,25 @@ from timer import timer_html
 from roll import roll
 from quotes import toggleSub
 
-
 bot = config.bot
-bot.setWebhook('https://fia4awagner.pythonanywhere.com/tel' , max_connections=1)
+
+dnbot = None
 
 app = Flask(__name__)
 
-@app.route('/tel', methods=['POST'])
+@app.route(config.swagbot['hook'], methods=['POST'])
 def telegram_webhook():
     update = request.get_json()
     if 'callback_query' in update:
         updatePoll(update)
         return "OK"
-    if "message" in update:
+    if "message" in update and "text" in update["message"]:
         chat_id = update["message"]["chat"]["id"]
         if update["message"]["text"].startswith('/roll '):
             roll_val, roll_msg = roll(update["message"]["text"][6:], [])
             bot.sendMessage(chat_id, ''.join(roll_msg), parse_mode='Markdown')
             return "OK"
-        if update["message"]["text"] == '/togglesub':
+        if update["message"]["text"].startswith('/togglesub'):
             text = toggleSub(update)
             bot.sendMessage(chat_id, text, parse_mode='Markdown')
             return "OK"
@@ -38,6 +38,13 @@ def telegram_webhook():
             if poll != None:
                 closePoll(poll)
             return "OK"
+    return "OK"
+
+@app.route(config.dntelegram['hook'], methods=['POST'])
+def dnidb():
+    update = request.get_json()
+    chat_id = update["message"]["chat"]["id"]
+    dnbot.sendMessage(chat_id, "Coming soon!", parse_mode='Markdown')
     return "OK"
 
 @app.route('/timer.html', methods=['GET'])
