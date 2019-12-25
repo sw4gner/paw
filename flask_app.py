@@ -39,7 +39,7 @@ CMD_MAPPING = {
     'list': cmds.list,
     'roulette': cmds.roulette,
     'bit': cmds.bit,
-    'rs': cmds.sendViaBot,
+    'svb': cmds.sendViaBot,
 }
 
 def addPhoto (file_id, typ3):

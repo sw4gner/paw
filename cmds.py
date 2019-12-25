@@ -106,4 +106,16 @@ def getTenor(term):
         if 'results' in jobj and len(jobj['results'])>0:
             return jobj['results'][0]["url"]
 
+REX_MSG='\/rs (-?\d*) (.*)'
+
+@tele_util.onlySysUser
+def sendViaBot(msg):
+    m = re.search(REX_MSG,msg.txt)
+    if m == None:
+        return "OK"
+    msg.bot.sendMessage(m.group(1), m.group(2))
+
+
+
+
 

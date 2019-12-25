@@ -48,7 +48,7 @@ class MsgUtil(object):
 
 #decorators 
 
-def sysUser(func):
+def onlySysUser(func):
     def wrap(*args):
         if getUser(args[0].upd) in config.sysuser:
             return func(*args)
