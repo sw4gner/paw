@@ -1,5 +1,5 @@
 sysuser = -1
-site = 'https://fia4awagner.pythonanywhere.com'
+site = ''
 proxy_url = "http://proxy.server:3128"
 
 swagbot = {
