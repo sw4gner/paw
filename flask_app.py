@@ -31,13 +31,15 @@ def telegram_webhook():
 
 
 
-@tele_util.sysUser
-def test(msg):
-    pass
-
 
 CMD_MAPPING = {
     'zitat': cmds.zitat,
+    'gif': cmds.gif,
+    'tenor': cmds.tenor,
+    'list': cmds.list,
+    'roulette': cmds.roulette,
+    'bit': cmds.bit,
+    'rs': cmds.sendViaBot,
 }
 
 def addPhoto (file_id, typ3):
