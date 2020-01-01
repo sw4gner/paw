@@ -11,12 +11,13 @@ import time
 import sys
 import urllib3
 from contextlib import closing
-from functools import lru_cache
+from functools import lru_cache, wraps
 
 ###############################################################################
 ###### decorators #############################################################
 
 def onlySysUser(func):
+    @wraps(func)
     def wrap(*args):
         msg =args[0]
         if msg.getUser() in config.sysuser:
@@ -29,6 +30,7 @@ def catchKeyError (func):
     '''
     decorator to catch KeyError and return None
     '''
+    @wraps(func)
     def wrap(*args, **kwargs):
         try:
             return func(*args, **kwargs)
@@ -39,6 +41,7 @@ def catchKeyError (func):
 oadCache={}
 oadDate=''
 def onceADay(fnc):
+    @wraps(fnc)
     def wrapper(*args):
         global oadCache
         global oadDate
@@ -51,6 +54,7 @@ def onceADay(fnc):
     return wrapper
 
 def tryAndLogError(func):
+    @wraps(func)
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
