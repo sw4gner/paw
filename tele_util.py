@@ -8,6 +8,7 @@ import telepot
 import MySQLdb
 import config
 import time
+import sys
 from contextlib import closing
 from functools import lru_cache
 
@@ -47,6 +48,16 @@ def onceADay(fnc):
             oadCache[str(args)] = fnc(*args)
         return oadCache.get(str(args))
     return wrapper
+
+def tryAndLogError(func):
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception  as e:
+            print(str(e), file=sys.stderr)
+            return "OK"
+    return wrapper
+
 ###### decorators #############################################################
 ###############################################################################
 @onceADay
@@ -94,7 +105,6 @@ class MsgUtil(object):
         :return: message>from>id
         '''
         return self.upd["message"]["from"]["id"]
-
 
 ###############################################################################
 ### DB                                     ###################################
