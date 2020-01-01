@@ -27,6 +27,7 @@ def swagbot():
     if msg.cmd in CMD_MAPPING:
         CMD_MAPPING[msg.cmd](msg)
     tele_util.addFile(msg)
+    tele_util.updateMsgLog(msg.upd)
     return 'OK'
 
 

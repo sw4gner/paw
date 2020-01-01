@@ -177,3 +177,29 @@ def addPhoto (file_id, typ3):
     ) LIMIT 1'''
     data = {'f':file_id, 't': typ3, 'ts': time.strftime('%Y-%m-%d %H:%M:%S')}
     executeSQL(sql, data)
+
+typ3s = {
+    't': 'text',
+    'a': 'animation',
+    's': 'sticker',
+    'p': 'photo',
+    'v': 'video',
+    'i': 'voice',
+    'o': 'poll',
+    'd': 'document',
+    'c': 'comand',
+}
+
+def updateMsgLog(upd):
+    reply=upd['message'].get('reply_to_message', {}).get('message_id', 0)
+    length=len(upd['message'].get('text', '1'))
+    typ3=next((key for key, val in typ3s.items() if upd['message'].get(val, None)), 'N')
+    if typ3 == 't' and upd['message']['text'].startswith('/'):
+        typ3 = 'c'
+    sql = """ insert into msglog
+    (msg_id, user_id, chat_id, reply, date, time, day, len, type)
+    values (%s,'%s','%s',%s,'%s','%s','%s',%s,'%s')
+    """ % (upd['message']['message_id'],upd['message']['from']['id'],upd['message']['chat']['id'] \
+           , reply,time.strftime('%Y-%m-%d'), time.strftime('%H:%M:%S'), time.strftime('%u'), length, typ3)
+    executeSQL(sql)
+
