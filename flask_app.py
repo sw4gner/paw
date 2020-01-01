@@ -6,6 +6,7 @@ import random
 import re
 import sys
 import time
+import os
 
 from list import savNew, getList, getRandomList, getRandomFromList, removeFromList
 from randgif import getRand, getRandTenor, getTrendTenor
@@ -13,14 +14,15 @@ from timer import timer_html
 from roll import roll
 from contextlib import closing
 
+
+os.environ["TZ"] = "Europe/Berlin"
+time.tzset()
+
 daylie_post = ('0000-00-00', '', '')
 
 bot = config.bot
 
 dnbot = config.botdnbot
-
-
-crabbot = config.crabbot
 
 app = Flask(__name__)
 
@@ -28,9 +30,9 @@ app = Flask(__name__)
 def telegram_webhook():
     try:
         update = request.get_json()
-        if 'callback_query' in update and False:
-            #updatePoll(update)
-            return "OK"
+        updateMsgLog(update)
+        if random.randint(0,80) == 0:
+            bot.sendDocument(update["message"]["chat"]["id"], getRand('hallo'))
         if update["message"]["from"]["id"] == config.sysuser:
             if "message" in update and "photo" in update["message"]:
                 addPhoto(update['message']['photo'][0]['file_id'], 'p')
@@ -47,6 +49,9 @@ def telegram_webhook():
                 if m == None:
                     return "OK"
                 bot.sendMessage(m.group(1), m.group(2))
+                return "OK"
+        if not update["message"]["text"].startswith('/'):
+            return "OK"
         if "message" in update and "text" in update["message"]:
             chat_id = update["message"]["chat"]["id"]
             if update["message"]["text"].startswith('/zitat'):
@@ -128,11 +133,43 @@ def dnidb():
             return "OK"
     store(m, dnbot)
     return "OK"
+
+typ3s = {
+    't': 'text',
+    'a': 'animation',
+    's': 'sticker',
+    'p': 'photo',
+    'v': 'video',
+    'i': 'voice',
+    'o': 'poll',
+    'd': 'document',
+    'c': 'comand',
+}
+
+def updateMsgLog(upd):
+    reply=upd['message'].get('reply_to_message', {}).get('message_id', 0)
+    length=len(upd['message'].get('text', '1'))
+    typ3=next((key for key, val in typ3s.items() if upd['message'].get(val, None)), 'N')
+    if typ3 == 't' and upd['message']['text'].startswith('/'):
+        typ3 = 'c'
+    sql = """
+    insert into msglog
+    (msg_id, user_id, chat_id, reply, date, time, day, len, type)
+    values (%s,'%s','%s',%s,'%s','%s','%s',%s,'%s')
+    """ % (upd['message']['message_id'],upd['message']['from']['id'],upd['message']['chat']['id'], reply,time.strftime('%Y-%m-%d'), time.strftime('%H:%M:%S'), time.strftime('%u'), length, typ3)
+    execSql(sql)
+
+def execSql(sql):
+    with closing(config.getCon()) as con:
+        with closing(con.cursor()) as cur:
+            cur.execute(sql)
+            con.commit()
+
 def addPhoto (file_id, typ3):
     with closing(config.getCon()) as con:
         with closing(con.cursor()) as cur:
             sql = ('''
-            INSERT INTO daylie_post (file_id, type, date_day,tags, cts)
+            INSERT INTO daylie_post (file_id, type, date_day, tags, cts)
             SELECT '%(f)s', '%(t)s', '', 'b', '%(ts)s' FROM DUAL WHERE NOT EXISTS (
                 SELECT file_id FROM daylie_post WHERE file_id = '%(f)s'
             ) LIMIT 1''' % {'f':file_id, 't': typ3, 'ts': time.strftime('%Y-%m-%d %H:%M:%S')})
@@ -246,19 +283,6 @@ def getdayliepost(chat_id):
         bot.sendDocument(chat_id, fileId, caption=u'\U0001F9A6\U0001F9A6\U0001F9A6')
     #bot.sendDocument(chat_id,'CgADBAAD7gEAAnNK_FEzhF6_uX7faRYE')
 
-@app.route(config.crabtelegram['hook'], methods=['POST'])
-def crabhook():
-    m = request.get_json()
-    if "message" in m and "text" in m["message"]:
-        chat_id = m["message"]["chat"]["id"]
-        if m["message"]["text"].startswith('/silence'):
-            text = m["message"]["text"][9:]
-            createOutPng(text)
-            with open("/home/fia4awagner/mysite/img/out.png", "rb") as f:
-                crabbot.sendPhoto(chat_id, ('silence.png', f))
-            return "OK"
-    return "OK"
-
 def dumpPhoto(bot, chat_id):
     with closing(config.getCon()) as con:
         with closing(con.cursor()) as cur:
@@ -289,16 +313,18 @@ def store (m, bot):
                 print('no insert')
             con.commit()
 
+def tryAndLogError(func):
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception  as e:
+            print(str(e), file=sys.stderr)
+            return "OK"
+    return wrapper
+
 @app.route('/timer.html', methods=['GET'])
 def timer():
     return timer_html
-
-
-from PIL import Image
-from PIL import ImageFont
-from PIL import ImageDraw
-
-font = ImageFont.truetype("/home/fia4awagner/mysite/img/20db.otf", 25)
 
 @app.route('/silence.png')
 def hello_world():
@@ -306,8 +332,60 @@ def hello_world():
     createOutPng(text)
     return send_file("/home/fia4awagner/mysite/img/out.png", attachment_filename='silence.png',mimetype='image/png')
 
+crabbot = config.crabbot
+
+@app.route(config.crabtelegram['hook'], methods=['POST'])
+@tryAndLogError
+def crabhook():
+    m = request.get_json()
+    if "message" in m and "text" in m["message"] and m["message"]["text"].startswith('/silence'):
+        createOutPng(m["message"]["text"][9:])
+        with open("/home/fia4awagner/mysite/img/out.png", "rb") as f:
+            crabbot.sendPhoto(m["message"]["chat"]["id"], ('silence.png', f))
+    return "OK"
+
+from PIL import Image
+from PIL import ImageFont
+from PIL import ImageDraw
+font = ImageFont.truetype("/home/fia4awagner/mysite/img/20db.otf", 25)
 def createOutPng(text):
-    img = Image.open("/home/fia4awagner/mysite/img/silence.png")
-    draw = ImageDraw.Draw(img)
-    draw.text((22, 35), text ,(255,255,255),font=font)
-    img.save('/home/fia4awagner/mysite/img/out.png')
+    with Image.open("/home/fia4awagner/mysite/img/silence.png") as img:
+        draw = ImageDraw.Draw(img)
+        draw.text((22, 35), text ,(255,255,255),font=font)
+        img.save('/home/fia4awagner/mysite/img/out.png')
+
+
+oadCache=[]
+oadDate=''
+def onceADay(fnc):
+    def wrapper(*args):
+        global oadCache
+        global oadDate
+        if not time.strftime('%Y%m%d') in oadDate:
+            oadCache=[]
+            oadDate=time.strftime('%Y%m%d')
+        if (str(args)) in oadCache:
+            return True
+        else:
+            oadCache.append(str(args))
+            return fnc(*args)
+    return wrapper
+
+@onceADay
+def syncUser(chat_id):
+    sql = "select user_id from msglog where chat_id='%s' group by user_id;" % (chat_id)
+    for user in readSql(sql):
+       user = bot.getChatMember(chat_id, user[0])['user']
+       for i in ['user_id','first_name','username','last_name']:
+           if not user.get(i):
+               user[i] = ''
+       sql = "delete from usr where user_id='%(id)s';" % user
+       execSql(sql)
+       sql = "insert into usr (user_id,first_name,username,last_name) values ('%(id)s','%(first_name)s','%(username)s','%(last_name)s');" % user
+       execSql(sql)
+
+def readSql(sql):
+    with closing(config.getCon()) as con:
+        with closing(con.cursor()) as cur:
+            cur.execute(sql)
+            return cur.fetchall()

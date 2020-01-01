@@ -38,4 +38,11 @@ def daylieQuote():
             cur = con.cursor()
             cur.execute("select chatid from quoteSubs where subed=1")
             for row in cur:
-                bot.sendMessage(row[0], text, parse_mode='Markdown')
+                try:
+                    bot.sendMessage(row[0], text, parse_mode='Markdown')
+                except: # BotWasKickedError
+                    sql = "update quoteSubs set subed=0 where chatid=%s" % row[0]
+                    with closing(config.getCon()) as con:
+                        with closing(con.cursor()) as cur:
+                            cur.execute(sql)
+                        con.commit()
