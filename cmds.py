@@ -1,5 +1,5 @@
 import re
-import tele_util, lst, config
+import tele_util, lst, config, roll
 import time
 import random
 import requests
@@ -109,9 +109,9 @@ def getTenor(term):
         if 'results' in jobj and len(jobj['results'])>0:
             return jobj['results'][0]["url"]
 
-def roll(msg):
+def rollFunc(msg):
     _, roll_text = roll.roll(msg.txt)
-    msg.send(roll_text)
+    msg.send(roll_text, parse_mode='Markdown')
 
 def dailyPost(msg):
     tags=tele_util.getProp(msg.getChatId(), 'dayliePost/tags', default='r/otters')

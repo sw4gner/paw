@@ -18,7 +18,7 @@ CMD_MAPPING = {
     'bit': cmds.bit,
     'svb': cmds.sendViaBot,
     'daily': cmds.dailyPost,
-    'roll': cmds.roll,
+    'roll': cmds.rollFunc,
 }
 
 @app.route(config.swagbot['hook'], methods=['POST'])
