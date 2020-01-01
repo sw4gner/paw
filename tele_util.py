@@ -9,6 +9,7 @@ import MySQLdb
 import config
 import time
 import sys
+import urllib3
 from contextlib import closing
 from functools import lru_cache
 
@@ -154,6 +155,12 @@ def readSQL(sql, data=None):
 ### DB                                     ###################################
 ###############################################################################
 
+
+proxy_url = "http://proxy.server:3128"
+telepot.api._pools = {
+    'default': urllib3.ProxyManager(proxy_url=proxy_url, num_pools=3, maxsize=10, retries=False, timeout=30),
+}
+telepot.api._onetime_pool_spec = (urllib3.ProxyManager, dict(proxy_url=proxy_url, num_pools=1, maxsize=1, retries=False, timeout=30))
 def startBot(conf):
     bot = telepot.Bot(conf['api_key'])
     bot.setWebhook(config.site+conf['hook'], max_connections=1)
