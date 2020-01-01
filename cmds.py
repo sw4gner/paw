@@ -4,45 +4,47 @@ import time
 import random
 import requests
 import json
-from bokeh.themes import default
 
 REX_ZTT_ADD='\/zitat((.*)~\|~\s?(.*))?'
 REX_ZTT='\/zitat\s(.*)?'
 
 def zitat(msg):
-    m = re.search(REX_ZTT_ADD, msg.txt)
+    m = re.search(REX_ZTT_ADD, msg.upd["message"]["text"])
     if m.group(1) != None:
         sql = '''
         INSERT INTO ztt (chat_id, autor, text, cts)
-        value (%(chat_id)s, '%(at)s', '%(tx)s', '%(cts)s')
+        value (%(chat_id)s, %(at)s, %(tx)s, %(cts)s)
         '''
         data = {'chat_id': msg.getChatId(), 'at': m.group(3),'tx': m.group(2), 'cts': time.strftime('%Y-%m-%d %H:%M:%S')}
         tele_util.executeSQL(sql, data)
         msg.send(('%s ~|~ %s' % (m.group(2), m.group(3))))
         return "OK"
-    m = re.search(REX_ZTT, msg.txt)
+    m = re.search(REX_ZTT, msg.upd["message"]["text"])
     if m != None:
         sql = """
-        select concat(text, ' ~|~ ', autor) 
-        from ztt 
-        where chat_id=%(id)s 
-        and lower(text) like '%%%(t)s%%' 
-        or lower(autor) like '%%%s%%' 
-        order by rand() limit 1" 
+        select concat(text, ' ~|~ ', autor)
+        from ztt
+        where chat_id=%(id)s
+        and lower(text) like '%%%(t)s%%'
+        or lower(autor) like '%%%(t)s%%'
+        order by rand() limit 1
         """ % {'id': msg.getChatId(), 't': m.group(1).lower()}
+        print(sql)
         msg.send(tele_util.getOneSQL(sql))
     else:
         sql = """
-        select 'm',concat(text, ' ~|~ ', autor) 
-        from ztt 
+        select concat(text, ' ~|~ ', autor)
+        from ztt
         where chat_id=%s order by rand() limit 1""" % (msg.getChatId())
         msg.send(tele_util.getOneSQL(sql))
 
-REX_LIST='\/list\s(del\s|rnd|)\s*(\S*)\s*(.*)?'
+REX_LIST='/list\s(del|rnd|)\s*(\S*)\s*(.*)?'
 def list_(msg):
-    m = re.search(REX_LIST,msg.txt)
+    m = re.search(REX_LIST, msg.upd["message"]["text"])
     if m == None:
         ls = lst.getAllLists(msg.getChatId())
+        msg.send(('*All*\n%s' % (lst.prtList(ls))), parse_mode='Markdown')
+        return
     else:
         modus = m.group(1)
         name = m.group(2)
@@ -52,10 +54,11 @@ def list_(msg):
         elif modus == 'del':
             lst.delList(msg.getChatId(), name, entry)
         elif modus == 'rnd':
-            lst.rndList(msg.getChatId(), name)
+            msg.send('*Random %s:* = %s' % (name, lst.rndList(msg.getChatId(), name)), parse_mode='Markdown')
+            return
         ls = lst.getList(msg.getChatId(), name)
-    msg.send(('*%s:*\n[%s]' % (name, lst.prtList(ls))), parse_mode='Markdown')
-   
+        msg.send(('*%s:*\n[%s]' % (name, lst.prtList(ls))), parse_mode='Markdown')
+
 rol_dec = {}
 def roulette(msg):
     global rol_dec
@@ -85,7 +88,7 @@ def gif(msg):
         default=tele_util.getProp(msg.getChatId(), 'tenor/default', default='otter')
         url = getGiphy(default)
     msg.send(url, typ='d', reply=True)
-    
+
 def tenor(msg):
     url = getTenor(msg.txt)
     if url == None:
@@ -116,7 +119,7 @@ def rollFunc(msg):
 def dailyPost(msg):
     tags=tele_util.getProp(msg.getChatId(), 'dayliePost/tags', default='r/otters')
     typ3, msg_txt = getDailyPost(tags)
-    msg.send (msg_txt, typ=typ3)
+    msg.send(msg_txt, typ=typ3)
 
 @tele_util.onceADay
 def getDailyPost(tags):
@@ -134,10 +137,10 @@ def getDailyPost(tags):
         return rows[0][2], rows[0][1]
 
 
-REX_MSG='\/rs (-?\d*) (.*)'
+REX_MSG='\/svb (-?\d*) (.*)'
 @tele_util.onlySysUser
 def sendViaBot(msg):
-    m = re.search(REX_MSG,msg.txt)
+    m = re.search(REX_MSG,msg.upd["message"]["text"])
     if m == None:
         return "OK"
     msg.bot.sendMessage(m.group(1), m.group(2))

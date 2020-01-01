@@ -58,17 +58,14 @@ def tryAndLogError(func):
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except Exception  as e:
-            print(str(e), file=sys.stderr)
+        except Exception as e:
+            print(e, file=sys.stderr)
             return "OK"
     return wrapper
 
 ###### decorators #############################################################
 ###############################################################################
-@onceADay
-def f(a):
-    print (a)
-    return a
+
 
 class MsgUtil(object):
     '''
@@ -77,7 +74,7 @@ class MsgUtil(object):
     def __init__(self, bot, upd):
         self.bot=bot
         self.upd=upd
-        self.TXT_PATT='\/(\w*)(?:%s)?\s+(.*)' % bot.getMe()['username']
+        self.TXT_PATT='\/(\w*)(?:%s)?\s*(.*)' % bot.getMe()['username']
         self.cmd, self.txt  = self.paseText(upd)
 
     def paseText(self, upd):
@@ -94,7 +91,7 @@ class MsgUtil(object):
     @catchKeyError
     def getChatId(self):
         return self.upd["message"]["chat"]["id"]
-        
+
     def send (self, msg_txt, typ='m', parse_mode=None, reply=False, caption=None, file=None):
         kwargs = {}
         if caption:
@@ -103,14 +100,14 @@ class MsgUtil(object):
             kwargs['parse_mode'] = parse_mode
         if typ == 'm':
             self.bot.sendMessage(self.getChatId(), msg_txt, **kwargs)
-        elif type == 'd':
+        elif typ == 'd':
             self.bot.sendDocument(self.getChatId(), msg_txt, **kwargs)
-        elif type == 'p':
+        elif typ == 'p':
             if file:
                 with open(file, "rb") as f:
                     self.bot.sendPhoto(self.getChatId(), ('silence.png', f), **kwargs)
             else:
-                self.bot.sendDocument(self.getChatId, msg_txt, **kwargs)
+                self.bot.sendPhoto(self.getChatId(), msg_txt, **kwargs)
 
     @catchKeyError
     def getUser(self):
@@ -126,9 +123,9 @@ class MsgUtil(object):
 def getProp(chat, name, default=None):
     sql = "select value from props where chat_id='%s' and name='%s'" % (chat, name)
     return getOneSQL(sql) or default
-    
+
 def getCon():
-    return MySQLdb.connect(config.con_info)
+    return MySQLdb.connect(**config.con_info)
 
 def executeSQL(sql, data=None, cnt=0):
     with closing(getCon()) as con:
@@ -142,11 +139,11 @@ def executeSQL(sql, data=None, cnt=0):
 
 def getOneSQL(sql, data=None):
     ret = readSQL(sql, data)
-    if not ret:
+    if len(ret) == 0:
         return None
     else:
         return ret[0][0]
-    
+
 def readSQL(sql, data=None):
     with closing(getCon()) as con:
         with closing(con.cursor()) as cur:
@@ -154,7 +151,7 @@ def readSQL(sql, data=None):
                 cur.execute(sql)
             else:
                 cur.execute(sql,data)
-            return cur.fetchall() or None
+            return cur.fetchall() or []
 
 ### DB                                     ###################################
 ###############################################################################
