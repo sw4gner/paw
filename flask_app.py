@@ -1,4 +1,4 @@
-from mysite import tele_util, config, cmds, crab
+import tele_util, config, cmds, crab
 from flask import Flask, request
 import time
 import os
