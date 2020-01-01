@@ -56,7 +56,7 @@ def crabbot_hook():
     msg = tele_util.MsgUtil(crabbot, request.get_json())
     if msg.cmd == 'silence':
         crab.createOutPng(msg.txt)
-        msg.send('', typ='p', file='/home/fia4awagner/mysite/img/silence.png')
+        msg.send('', typ='p', file='/home/fia4awagner/mysite/img/out.png')
     return "OK"
 
 
