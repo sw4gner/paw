@@ -211,3 +211,15 @@ def updateMsgLog(upd):
            , reply,time.strftime('%Y-%m-%d'), time.strftime('%H:%M:%S'), time.strftime('%u'), length, typ3)
     executeSQL(sql)
 
+@onceADay
+def syncUser(chat_id):
+    sql = "select user_id from msglog where chat_id='%s' group by user_id;" % (chat_id)
+    for user in readSql(sql):
+       user = bot.getChatMember(chat_id, user[0])['user']
+       for i in ['user_id','first_name','username','last_name']:
+           if not user.get(i):
+               user[i] = ''
+       sql = "delete from usr where user_id='%(id)s';" % user
+       execSql(sql)
+       sql = "insert into usr (user_id,first_name,username,last_name) values ('%(id)s','%(first_name)s','%(username)s','%(last_name)s');" % user
+       execSql(sql)
