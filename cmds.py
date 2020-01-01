@@ -4,6 +4,7 @@ import time
 import random
 import requests
 import json
+from bokeh.themes import default
 
 REX_ZTT_ADD='\/zitat((.*)~\|~\s?(.*))?'
 REX_ZTT='\/zitat\s(.*)?'
@@ -81,13 +82,15 @@ def bit(msg):
 def gif(msg):
     url = getGiphy(msg.txt)
     if url == None:
-        url = getGiphy('otter')
+        default=tele_util.getProp(msg.getChatId(), 'tenor/default', default='otter')
+        url = getGiphy(default)
     msg.send(url, typ='d', reply=True)
     
 def tenor(msg):
     url = getTenor(msg.txt)
     if url == None:
-        url = getTenor('sexy')
+        default=tele_util.getProp(msg.getChatId(), 'tenor/default', default='sexy')
+        url = getTenor(default)
     msg.send(url, typ='d', reply=True)
 
 def getGiphy(term):
@@ -106,8 +109,29 @@ def getTenor(term):
         if 'results' in jobj and len(jobj['results'])>0:
             return jobj['results'][0]["url"]
 
-REX_MSG='\/rs (-?\d*) (.*)'
 
+def dailyPost(msg):
+    tags=tele_util.getProp(msg.getChatId(), 'dayliePost/tags', default='r/otters')
+    typ3, msg_txt = getDailyPost(tags)
+    msg.send (msg_txt, typ=typ3)
+
+@tele_util.onceADay
+def getDailyPost(tags):
+    sql = "select id, file_id, type from daylie_post where tags like '%s' and date_day='%s' limit 1" \
+            % (tags, time.strftime('%Y-%m-%d'))
+    rows = tele_util.readSQL(sql)
+    if rows:
+        return rows[0][2], rows[0][1]
+    else:
+        sql = """ select id, file_id, type from daylie_post where tags like '%s' and date_day=''
+        order by rand() limit 1""" % (tags)
+        rows = tele_util.readSQL(sql)
+        sql = "update daylie_post set date_day = '%s' where id=%s" % (time.strftime('%Y-%m-%d'), rows[0][0])
+        tele_util.executeSQL(sql)
+        return rows[0][2], rows[0][1]
+
+
+REX_MSG='\/rs (-?\d*) (.*)'
 @tele_util.onlySysUser
 def sendViaBot(msg):
     m = re.search(REX_MSG,msg.txt)
