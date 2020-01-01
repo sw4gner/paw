@@ -23,7 +23,7 @@ CMD_MAPPING = {
 
 @app.route(config.swagbot['hook'], methods=['POST'])
 @tele_util.tryAndLogError
-def swagbot():
+def swagbot_hook():
     msg = tele_util.MsgUtil(swagbot, request.get_json())
     if msg.cmd in CMD_MAPPING:
         CMD_MAPPING[msg.cmd](msg)
@@ -36,7 +36,7 @@ dnbot = tele_util.startBot(config.dntelegram)
 
 @app.route(config.dntelegram['hook'], methods=['POST'])
 @tele_util.tryAndLogError
-def dnidb():
+def dnbot_hook():
     m = request.get_json()
     if m.get('message', {}).get('photo', None):
         sql = """
@@ -52,7 +52,7 @@ crabbot = dnbot = tele_util.startBot(config.crabtelegram)
 
 @app.route(config.crabtelegram['hook'], methods=['POST'])
 @tele_util.tryAndLogError
-def crabhook():
+def crabbot_hook():
     msg = tele_util.MsgUtil(crabbot, request.get_json())
     if msg.cmd == 'silence':
         crab.createOutPng(msg.txt)

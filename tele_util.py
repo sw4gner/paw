@@ -77,7 +77,7 @@ class MsgUtil(object):
     def __init__(self, bot, upd):
         self.bot=bot
         self.upd=upd
-        self.TXT_PATT='\/(\w*)(?>@%s)?\s?(.*)?' % bot.getMe()['username']
+        self.TXT_PATT='\/(\w*)(?:%s)?\s+(.*)' % bot.getMe()['username']
         self.cmd, self.txt  = self.paseText(upd)
 
     def paseText(self, upd):
