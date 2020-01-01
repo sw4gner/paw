@@ -13,11 +13,12 @@ CMD_MAPPING = {
     'zitat': cmds.zitat,
     'gif': cmds.gif,
     'tenor': cmds.tenor,
-    'list': cmds.list,
+    'list': cmds.list_,
     'roulette': cmds.roulette,
     'bit': cmds.bit,
     'svb': cmds.sendViaBot,
     'daily': cmds.dailyPost,
+    'roll': cmds.roll,
 }
 
 @app.route(config.swagbot['hook'], methods=['POST'])

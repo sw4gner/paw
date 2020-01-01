@@ -39,7 +39,7 @@ def zitat(msg):
         msg.send(tele_util.getOneSQL(sql))
 
 REX_LIST='\/list\s(del\s|rnd|)\s*(\S*)\s*(.*)?'
-def list(msg):
+def list_(msg):
     m = re.search(REX_LIST,msg.txt)
     if m == None:
         ls = lst.getAllLists(msg.getChatId())
@@ -109,6 +109,9 @@ def getTenor(term):
         if 'results' in jobj and len(jobj['results'])>0:
             return jobj['results'][0]["url"]
 
+def roll(msg):
+    _, roll_text = roll.roll(msg.txt)
+    msg.send(roll_text)
 
 def dailyPost(msg):
     tags=tele_util.getProp(msg.getChatId(), 'dayliePost/tags', default='r/otters')
