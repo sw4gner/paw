@@ -1,16 +1,14 @@
-from mysite import tele_util, config, cmds
+from mysite import tele_util, config, cmds, crab
 from flask import Flask, request
 import time
 import os
 
 os.environ["TZ"] = "Europe/Berlin"
 time.tzset()
-
-swagbot = tele_util.startBot(config.swagbot)
-dnbot = tele_util.startBot(config.dntelegram)
-
 app = Flask(__name__)
 
+
+swagbot = tele_util.startBot(config.swagbot)
 CMD_MAPPING = {
     'zitat': cmds.zitat,
     'gif': cmds.gif,
@@ -32,6 +30,8 @@ def swagbot():
     return 'OK'
 
 
+dnbot = tele_util.startBot(config.dntelegram)
+
 @app.route(config.dntelegram['hook'], methods=['POST'])
 @tele_util.tryAndLogError
 def dnidb():
@@ -46,6 +46,16 @@ def dnidb():
     return "OK"
 
 
+crabbot = dnbot = tele_util.startBot(config.crabtelegram)
+
+@app.route(config.crabtelegram['hook'], methods=['POST'])
+@tele_util.tryAndLogError
+def crabhook():
+    msg = tele_util.MsgUtil(crabbot, request.get_json())
+    if msg.cmd == 'silence':
+        crab.createOutPng(msg.txt)
+        msg.send('', typ='p', file='/home/fia4awagner/mysite/img/silence.png')
+    return "OK"
 
 
 

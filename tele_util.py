@@ -86,19 +86,27 @@ class MsgUtil(object):
         else:
             return (m.group(1), None)
 
+    @catchKeyError
     def getChatId(self):
         return self.upd["message"]["chat"]["id"]
         
-    def send (self, msg_txt, typ='m', parse_mode=None, reply=False, caption=None):
+    def send (self, msg_txt, typ='m', parse_mode=None, reply=False, caption=None, file=None):
         kwargs = {}
         if caption:
             kwargs['caption'] = caption
         if parse_mode:
             kwargs['parse_mode'] = parse_mode
         if typ == 'm':
-            self.bot.sendMessage(self.getChatId, msg_txt, **kwargs)
-        if type == 'd':
-            self.bot.sendDocument(self.getChatId, msg_txt, **kwargs)
+            self.bot.sendMessage(self.getChatId(), msg_txt, **kwargs)
+        elif type == 'd':
+            self.bot.sendDocument(self.getChatId(), msg_txt, **kwargs)
+        elif type == 'p':
+            if file:
+                with open(file, "rb") as f:
+                    self.bot.sendPhoto(self.getChatId(), ('silence.png', f), **kwargs)
+            else:
+                self.bot.sendDocument(self.getChatId, msg_txt, **kwargs)
+
     @catchKeyError
     def getUser(self):
         '''
