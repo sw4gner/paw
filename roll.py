@@ -18,7 +18,7 @@ def getrol (adv=None, prn=True):
             rs = min(roll1, roll2)
             out = 'd%i dis. (%i, %i) -> %i' % (dice, roll1, roll2, rs)
         return (rs, out)
-    return retfun	
+    return retfun
 
 def roll(term, out=[], adv=False):
     sum = 0
@@ -38,7 +38,7 @@ def roll(term, out=[], adv=False):
         out += ('mod -> %i\n' % mod)
     sum += mod
     out = list('*%s = %i*\n\n' % (term, sum)) + out
-    return sum, out
+    return sum, ''.join(out)
 
 def rslvroll(f_roll, sign, qnt, dice):
     sign = -1 if sign=='-' else 1
@@ -53,7 +53,7 @@ def rslvroll(f_roll, sign, qnt, dice):
     sum = 0
     sums =[]
     txt =[]
-    for i in range(qnt):
+    for _ in range(qnt):
         val, txt_rol = f_roll(dice)
         sum+=val
         sums.append(val)
