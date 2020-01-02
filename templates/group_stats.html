@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Group Statistics{% endblock %}
+
+{% block content %}
+	<section class="container" id="">
+		<h1>Statistics of group "{{groupname}}" </h1>
+	</section>
+	<section class="container" id="">
+		{% include 'set_scale.html' %}
+	</section>
+	
+	<section class="container" id="">
+		{% include 'linechart.html' %}
+	</section>
+	
+	<section class="container" id="">
+		{% include 'table.html' %}
+	</section>
+	
+	<section class="container" id="">
+		
+		<div class="row">
+			{% set titel = "Contribution in %" %}
+			{% set idx = 0 %}
+			{% set chart = chart1 %}
+		    <div class="column">{% include 'piechart.html' %}</div>
+		    {% set titel = "Mediatypes send" %}
+			{% set idx = 1 %}
+			{% set chart = chart2 %}
+		    <div class="column">{% include 'piechart.html' %}</div>
+		    {% set titel = "Characters typed" %}
+			{% set idx = 2 %}
+			{% set chart = chart3 %}
+		    <div class="column">{% include 'piechart.html' %}</div>
+  		</div>
+	</section>
+{% endblock %}

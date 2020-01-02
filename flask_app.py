@@ -1,5 +1,5 @@
 import tele_util, config, cmds, crab
-from flask import Flask, request
+from flask import Flask, request, render_template
 import time
 import os
 
@@ -63,4 +63,34 @@ def crabbot_hook():
     return "OK"
 
 
-
+@app.route('/groupstats/<groupid>')
+def groupstats(groupid, **kwargs):
+    data = {
+        'groupid': -1999999,
+        'groupname': 'idb with friends',
+        'scalestart': '2019-8-01',
+        'scaleend': '2019-8-01',
+        'btnmonth': True,
+        'linelabels': ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+        'users': [
+            {
+                'name': 'SWAGNER',
+                'rank':1,
+                'linedata': [300,500,44,321,123,452,5],
+                'posts': 1237,
+                'type': {'gif': 4, 'messages': 9,'commands': 3,},
+                'textlen':40000,
+            }, {
+                'name': 'SWAGNER#2',
+                'rank':2,
+                'linedata': [1300,520,443,31,1123,952,80],
+                'posts': 3237,
+                'type': {'gif': 20, 'messages': 2,'commands': 0,},
+                'textlen':78000,
+            },
+        ],
+        'chart1': [['SWAGNER', 30],['SWAGNER#2', 70],],
+        'chart2': [['gif', 2],['commands', 6],['messages', 9],],
+        'chart3': [['SWAGNER', 40000],['SWAGNER#2', 78000],],
+    }
+    return render_template('group_stats.html', **data)

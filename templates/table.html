@@ -1,0 +1,25 @@
+<h3>Details </h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Rank</th>
+      <th>User Name</th>
+      <th>Posts</th>
+      <th>chars typed</th>
+      <th>mediatypes send</th>
+    </tr>
+  </thead>
+  <tbody>
+  
+  {% for user in users %}
+    <tr>
+      <td>#{{user.rank}}</td>
+      <td>{{user.name}}</td>
+      <td>{{user.posts}}</td>
+      <td>{{user.textlen}}</td>
+      <td>{{user.type}}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>

@@ -1,0 +1,26 @@
+<form action="../groupstats/{{groupid}}" method="get">
+	<fieldset>
+	<input >
+		<div class="row">
+		    <div class="column">
+				<label for="scalestart">start</label>
+			 	<input 	type="text" value="{{scalestart}}" id="scalestart" 
+			 			name="scalestart" pattern="\d{4}-\d{2}-\d{2}">
+			</div>
+			<div class="column">
+				<label for="scaleend">end</label>
+				<input	type="text" value="{{scaleend}}" id="scaleend" 
+						name="scaleend" pattern="\d{4}-\d{2}-\d{2}">
+			</div>
+		</div>
+		<div class="row">
+			<button class="button {% if btnday %}{% else %}button-outline{% endif %}" 
+					name="btnday">day</button>
+			<button class="button {% if btnweek %}{% else %}button-outline{% endif %}" 
+					name="btnweek">week</button>
+			<button class="button {% if btnmonth %}{% else %}button-outline{% endif %}" 
+					name="btnmonth">month</button>
+		</div>
+	</fieldset>
+</form>
+

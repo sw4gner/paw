@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+    <head>
+        <title>{% block title %}{% endblock %}</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        
+        {% block meta %}
+            <meta name="description" content="">
+            <meta name="author" content="">
+        {% endblock %}
+
+        {% block css %}
+			<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
+			<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.css">
+			<link rel="stylesheet" href="/static/css/custome_milligram.css">
+        {% endblock %}
+        
+        <script src="/static/js/main.js"></script>
+        	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.min.js"></script>
+    </head>
+
+	<body>
+		<main class="wrapper">
+
+			<header class="container" >
+			 {% block header %}
+       		 {% endblock %}
+			</header>
+   
+   			{% block content %}
+    		{% endblock %}
+
+			<footer class="footer">
+				{% block footer %}
+	    		{% endblock %}
+			</footer>
+
+		</main>
+        
+        	
+        {% block script %}
+        {% endblock %}
+        
+        
+        
+    </body>
+</html>

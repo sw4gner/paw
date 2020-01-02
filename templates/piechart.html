@@ -1,0 +1,33 @@
+<div>
+	<h3>{{titel}}</h3>
+	<canvas id="chart-area-{{idx}}" tyle="width:33%;"></canvas>
+</div>
+
+<script>
+docReady(function() {
+var ctx = document.getElementById('chart-area-{{idx}}').getContext('2d');
+var myPie = new Chart(ctx, {
+	type: 'pie',
+	data: {
+		datasets: [{
+			data: [
+				{% for value in chart %}
+					{{value[1]}},
+				{% endfor %}
+				],
+			backgroundColor: [
+				{% for value in chart %}
+					getColor({{loop.index}}),
+				{% endfor %}
+			]
+		}],
+		labels: [
+			{% for value in chart %}
+				'{{value[0]}}',
+			{% endfor %}
+		]
+	}
+});
+});
+</script>
+
