@@ -20,7 +20,7 @@ def onlySysUser(func):
     @wraps(func)
     def wrap(*args):
         msg =args[0]
-        if msg.getUser() in config.sysuser:
+        if str(msg.getUser()) in config.sysuser:
             return func(*args)
         else:
             return None
@@ -124,6 +124,9 @@ def getProp(chat, name, default=None):
     sql = "select value from props where chat_id='%s' and name='%s'" % (chat, name)
     return getOneSQL(sql) or default
 
+def clearGetProp():
+    getProp.cache_clear()
+
 def getCon():
     return MySQLdb.connect(**config.con_info)
 
@@ -136,6 +139,7 @@ def executeSQL(sql, data=None, cnt=0):
                 rscnt = cur.execute(sql,data)
             if cnt == 0 or rscnt == cnt:
                 con.commit()
+            return rscnt
 
 def getOneSQL(sql, data=None):
     ret = readSQL(sql, data)
@@ -174,14 +178,14 @@ def addFile(msg):
     if 'photo' in upd['message']:
         addPhoto(upd['message']['photo'][0]['file_id'], 'p')
     if 'animation' in upd['message']:
-        addPhoto(upd['message']['animation']['file_id'], 'g')
+        addPhoto(upd['message']['animation']['file_id'], 'd')
     return "OK"
 
 def addPhoto (file_id, typ3):
     sql = '''
     INSERT INTO daylie_post (file_id, type, date_day,tags, cts)
-    SELECT '%(f)s', '%(t)s', '', 'b', '%(ts)s' FROM DUAL WHERE NOT EXISTS (
-        SELECT file_id FROM daylie_post WHERE file_id = '%(f)s'
+    SELECT %(f)s, %(t)s, '', 'b', %(ts)s FROM DUAL WHERE NOT EXISTS (
+        SELECT file_id FROM daylie_post WHERE file_id = %(f)s
     ) LIMIT 1'''
     data = {'f':file_id, 't': typ3, 'ts': time.strftime('%Y-%m-%d %H:%M:%S')}
     executeSQL(sql, data)
@@ -219,9 +223,9 @@ def syncUser(bot, chat_id):
        for i in ['user_id','first_name','username','last_name']:
            if not user.get(i):
                user[i] = ''
-       sql = "delete from usr where user_id='%(id)s';"
+       sql = "delete from usr where user_id=%(id)s;"
        executeSQL(sql, data={'id': user})
-       sql = "insert into usr (user_id,first_name,username,last_name) values ('%(id)s','%(first_name)s','%(username)s','%(last_name)s');"
+       sql = "insert into usr (user_id,first_name,username,last_name) values (%(id)s,%(first_name)s,%(username)s,%(last_name)s);"
        executeSQL(sql, data=user)
 
 

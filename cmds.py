@@ -43,7 +43,7 @@ def list_(msg):
     m = re.search(REX_LIST, msg.upd["message"]["text"])
     if m == None:
         ls = lst.getAllLists(msg.getChatId())
-        msg.send(('*All*\n%s' % (lst.prtList(ls))), parse_mode='Markdown')
+        msg.send('*Alle:*\n%s' % (lst.prtList(ls)), parse_mode='Markdown')
         return
     else:
         modus = m.group(1)
@@ -54,7 +54,7 @@ def list_(msg):
         elif modus == 'del':
             lst.delList(msg.getChatId(), name, entry)
         elif modus == 'rnd':
-            msg.send('*Random %s:* = %s' % (name, lst.rndList(msg.getChatId(), name)), parse_mode='Markdown')
+            msg.send('*Random %s* = %s' % (name, lst.rndList(msg.getChatId(), name)), parse_mode='Markdown')
             return
         ls = lst.getList(msg.getChatId(), name)
         msg.send(('*%s:*\n[%s]' % (name, lst.prtList(ls))), parse_mode='Markdown')
@@ -85,7 +85,7 @@ def bit(msg):
 def gif(msg):
     url = getGiphy(msg.txt)
     if url == None:
-        default=tele_util.getProp(msg.getChatId(), 'tenor/default', default='otter')
+        default=tele_util.getProp(msg.getChatId(), 'gif/default', default='otter')
         url = getGiphy(default)
     msg.send(url, typ='d', reply=True)
 
@@ -145,7 +145,24 @@ def sendViaBot(msg):
         return "OK"
     msg.bot.sendMessage(m.group(1), m.group(2))
 
-
-
+REX_PROP='(\S*)\s*(.*)'
+@tele_util.onlySysUser
+def props(msg):
+    m = re.search(REX_PROP,msg.txt)
+    if m == None:
+        return
+    data = {'chat_id': str(msg.getChatId()), 'name': m.group(1),'value': m.group(2)}
+    sql = "select value from props where chat_id=%(chat_id)s and name=%(name)s"
+    value = tele_util.getOneSQL(sql, data=data)
+    if value:
+        sql = "update props set value=%(value)s where chat_id=%(chat_id)s and name=%(name)s"
+        tele_util.executeSQL(sql, data=data)
+    else:
+        value='None'
+        sql = "insert into props (chat_id, name, value) values (%(chat_id)s, %(name)s, %(value)s)"
+        tele_util.executeSQL(sql, data=data)
+    tele_util.clearGetProp()
+    newval=str(tele_util.getProp(msg.getChatId(), m.group(1)))
+    msg.send('Property *'+m.group(1)+'* von *'+value+'* nach *'+newval+'* geändert', parse_mode='Markdown')
 
 
