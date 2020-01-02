@@ -175,19 +175,20 @@ def startBot(conf):
 @catchKeyError
 def addFile(msg):
     upd=msg.upd
+    tag=getProp(msg.getChatId(), 'addFile/tag', 'b')
     if 'photo' in upd['message']:
-        addPhoto(upd['message']['photo'][0]['file_id'], 'p')
+        addPhoto(upd['message']['photo'][0]['file_id'], 'p', tag)
     if 'animation' in upd['message']:
-        addPhoto(upd['message']['animation']['file_id'], 'd')
+        addPhoto(upd['message']['animation']['file_id'], 'd', tag)
     return "OK"
 
-def addPhoto (file_id, typ3):
+def addPhoto (file_id, typ3, tag):
     sql = '''
     INSERT INTO daylie_post (file_id, type, date_day,tags, cts)
-    SELECT %(f)s, %(t)s, '', 'b', %(ts)s FROM DUAL WHERE NOT EXISTS (
+    SELECT %(f)s, %(t)s, '', %(tag)s, %(ts)s FROM DUAL WHERE NOT EXISTS (
         SELECT file_id FROM daylie_post WHERE file_id = %(f)s
     ) LIMIT 1'''
-    data = {'f':file_id, 't': typ3, 'ts': time.strftime('%Y-%m-%d %H:%M:%S')}
+    data = {'f':file_id, 't': typ3, 'ts': time.strftime('%Y-%m-%d %H:%M:%S'), 'tag': tag}
     executeSQL(sql, data)
 
 typ3s = {
