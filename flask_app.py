@@ -28,8 +28,10 @@ def swagbot_hook():
     msg = tele_util.MsgUtil(swagbot, request.get_json())
     if msg.cmd in CMD_MAPPING:
         CMD_MAPPING[msg.cmd](msg)
-    tele_util.addFile(msg)
-    tele_util.updateMsgLog(msg.upd)
+    if 'Y' == tele_util.getProp(msg.getChatId(), 'addFile', default='N'):
+        tele_util.addFile(msg)
+    if 'Y' != tele_util.getProp(msg.getChatId(), 'MsgLog/deaktivate', default='N'):
+        tele_util.updateMsgLog(msg.upd)
     return 'OK'
 
 
