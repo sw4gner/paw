@@ -224,7 +224,7 @@ def syncUser(bot, chat_id):
        for i in ['user_id','first_name','username','last_name']:
            if not user.get(i):
                user[i] = ''
-       sql = "delete from usr where user_id=%(id)s;"
+       sql = "delete from usr where user_id=%(user_id)s;"
        executeSQL(sql, data={'id': user})
        sql = "insert into usr (user_id,first_name,username,last_name) values (%(id)s,%(first_name)s,%(username)s,%(last_name)s);"
        executeSQL(sql, data=user)
