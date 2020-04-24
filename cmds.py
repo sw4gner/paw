@@ -4,9 +4,10 @@ import time
 import random
 import requests
 import json
+import html
 
-REX_ZTT_ADD='\/zitat((.*)~\|~\s?(.*))?'
-REX_ZTT='\/zitat\s(.*)?'
+REX_ZTT_ADD='\/zitat((.+)~\|~\s?(.*))?'
+REX_ZTT='\/zitat[^@](.*)?'
 
 def zitat(msg):
     m = re.search(REX_ZTT_ADD, msg.upd["message"]["text"])
@@ -37,6 +38,27 @@ def zitat(msg):
         from ztt
         where chat_id=%s order by rand() limit 1""" % (msg.getChatId())
         msg.send(tele_util.getOneSQL(sql))
+
+def quiz (msg):
+    sql = "select text, autor from ztt where chat_id=%s and text <> '' order by rand() limit 1"
+    text, autor = tele_util.readSQL(sql, data=[str(msg.getChatId())])[0]
+    sql = "select autor from ztt where chat_id=%s and autor!=%s and text<>'' group by autor order by rand() limit 5"
+    r = tele_util.readSQL(sql, data=[str(msg.getChatId()), autor])
+    a = [e[0] for e in r]
+    a.append(autor)
+    random.shuffle(a)
+    url = 'https://api.telegram.org/bot%s/sendpoll' % config.swagbot['api_key']
+    myobj = {'chat_id': msg.getChatId(), 'question': text, 'options': a, 'correct_option_id':a.index(autor), 'type': 'quiz', 'is_anonymous':False}
+    requests.post(url, json = myobj)
+
+def trivia(msg, config=config.swagbot):
+    url = 'https://opentdb.com/api.php?amount=1&type=multiple'
+    rs = requests.get(url).json()['results'][0]
+    options = rs['incorrect_answers'] + [rs['correct_answer']]
+    random.shuffle(options)
+    url = 'https://api.telegram.org/bot%s/sendpoll' % config['api_key']
+    myobj = {'chat_id': msg.getChatId(), 'question': html.unescape(rs['question']), 'options': [html.unescape(e) for e in options], 'correct_option_id':options.index(rs['correct_answer']), 'type': 'quiz', 'is_anonymous':False}
+    requests.post(url, json = myobj)
 
 REX_LIST='/list\s(del|rnd|)\s*(\S*)\s*(.*)?'
 def list_(msg):
@@ -77,7 +99,7 @@ def roulette(msg):
 
 
 def bit(msg):
-    if random.randint(0,100) >= 40:
+    if random.randint(0,100) <= 40:
         msg.send('CgADBAADaAADDOAFUX2bfkqLEdVSFgQ', typ='d') # No
     else:
         msg.send('CgADBAADyJIAAhwXZAfKFg_xUcgLxRYE', typ='d') # Yes
@@ -117,9 +139,9 @@ def rollFunc(msg):
     msg.send(roll_text, parse_mode='Markdown')
 
 def dailyPost(msg):
-    tags=tele_util.getProp(msg.getChatId(), 'dayliePost/tags', default='r/otters')
+    tags=tele_util.getProp(msg.getChatId(), 'dayliePost/tags', default='r/bikinis')
     typ3, msg_txt = getDailyPost(tags)
-    msg.send(msg_txt, typ=typ3)
+    msg.send(msg_txt, typ=typ3, caption=time.strftime('%Y-%m-%d'))
 
 @tele_util.onceADay
 def getDailyPost(tags):
@@ -132,6 +154,8 @@ def getDailyPost(tags):
         sql = """ select id, file_id, type from daylie_post where tags like '%s' and date_day=''
         order by rand() limit 1""" % (tags)
         rows = tele_util.readSQL(sql)
+        if len(rows) == 0:
+            return 'der tag '+tags+' ist aufgebraucht', 'm'
         sql = "update daylie_post set date_day = '%s' where id=%s" % (time.strftime('%Y-%m-%d'), rows[0][0])
         tele_util.executeSQL(sql)
         return rows[0][2], rows[0][1]
@@ -165,4 +189,24 @@ def props(msg):
     newval=str(tele_util.getProp(msg.getChatId(), m.group(1)))
     msg.send('Property *'+m.group(1)+'* von *'+value+'* nach *'+newval+'* geändert', parse_mode='Markdown')
 
+def truth(msg):
+    if random.randint(0,100) >= int(tele_util.getProp(msg.getChatId(), 'dareortruth/perc', default=34)):
+        user = lst.rndList(msg.getChatId(), 'truthordare') or 'benutze /list truthordare um Optionen hinzuzufügen'
+    else:
+        user = 'du selber'
+    text = tele_util.getOneSQL("select text from tod where type in ("+tele_util.getProp(msg.getChatId(), 'dareortruth/types', default="'t','r','n','m','i'")+") order by rand() limit 1")
+    msg.send(user+' truth:\n'+text);
+def dare(msg):
+    if random.randint(0,100) >= int(tele_util.getProp(msg.getChatId(), 'dareortruth/perc', default=34)):
+        user = lst.rndList(msg.getChatId(), 'truthordare') or 'benutze /list truthordare um Optionen hinzuzufügen'
+    else:
+        user = 'du selber'
+    text = tele_util.getOneSQL("select text from tod where type='d' order by rand() limit 1")
+    msg.send(user+' dare:\n'+text)
+
+def stats(msg):
+    msg.send([sum(e)-min(e) for e in [[random.randint(1,6) for i in range(4)] for n in range(6)]])
+
+def inspirobot(msg):
+    url='https://inspirobot.me/api?generate=true'
 

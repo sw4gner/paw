@@ -11,10 +11,10 @@
     </tr>
   </thead>
   <tbody>
-  
+
   {% for user in users %}
     <tr>
-      <td>#{{user.rank}}</td>
+      <td>#{{loop.index0+1}}</td>
       <td>{{user.name}}</td>
       <td>{{user.posts}}</td>
       <td>{{user.textlen}}</td>

@@ -18,10 +18,10 @@ var myLineChart = Chart.Line(ctx, {
 					{% for user in users %}
 						{
 							label: '{{user.name}}',
-							borderColor: getColor({{user.rank}}),
-							backgroundColor: getColor({{user.rank}}),
+							borderColor: getColor({{loop.index0}}),
+							backgroundColor: getColor({{loop.index0}}),
 							fill: false,
-							data:{{user.linedata}},
+							data:{{linedata[loop.index0]|tojson}},
 							yAxisID: 'y-axis-1',
 						},
 					{% endfor %}
@@ -32,7 +32,7 @@ var myLineChart = Chart.Line(ctx, {
 				title: {
 					display: false,
 					text: ''
-				}, 
+				},
 				tooltips: {
 					mode: 'index',
 					intersect: false,

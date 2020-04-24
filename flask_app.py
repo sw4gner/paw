@@ -1,7 +1,8 @@
-import tele_util, config, cmds, crab
+import tele_util, config, cmds, crab, stats
 from flask import Flask, request, render_template
 import time
 import os
+
 
 os.environ["TZ"] = "Europe/Berlin"
 time.tzset()
@@ -20,12 +21,19 @@ CMD_MAPPING = {
     'daily': cmds.dailyPost,
     'roll': cmds.rollFunc,
     'prop': cmds.props,
+    'quiz': cmds.quiz,
+    'trivia': cmds.trivia,
+    'truth': cmds.truth,
+    'dare2': cmds.dare,
+    'stats': cmds.stats,
 }
 
 @app.route(config.swagbot['hook'], methods=['POST'])
 @tele_util.tryAndLogError
 def swagbot_hook():
     msg = tele_util.MsgUtil(swagbot, request.get_json())
+    if msg and not msg.hasmsg:
+        return 'OK'
     if msg.cmd in CMD_MAPPING:
         CMD_MAPPING[msg.cmd](msg)
     if 'Y' == tele_util.getProp(msg.getChatId(), 'addFile', default='N'):
@@ -33,7 +41,6 @@ def swagbot_hook():
     if 'Y' != tele_util.getProp(msg.getChatId(), 'MsgLog/deaktivate', default='N'):
         tele_util.updateMsgLog(msg.upd)
     return 'OK'
-
 
 dnbot = tele_util.startBot(config.dntelegram)
 
@@ -50,8 +57,17 @@ def dnbot_hook():
         tele_util.executeSQL(sql)
     return "OK"
 
+triviabot = tele_util.startBot(config.triviabot)
+@app.route(config.triviabot['hook'], methods=['POST'])
+@tele_util.tryAndLogError
+def triviabot_hook():
+    msg = tele_util.MsgUtil(triviabot, request.get_json())
+    if msg.cmd == 'trivia':
+        cmds.trivia(msg, config=config.triviabot)
+    return "OK"
 
-crabbot = dnbot = tele_util.startBot(config.crabtelegram)
+
+crabbot = tele_util.startBot(config.crabtelegram)
 
 @app.route(config.crabtelegram['hook'], methods=['POST'])
 @tele_util.tryAndLogError
@@ -62,35 +78,38 @@ def crabbot_hook():
         msg.send('', typ='p', file='/home/fia4awagner/mysite/img/out.png')
     return "OK"
 
-
 @app.route('/groupstats/<groupid>')
-def groupstats(groupid, **kwargs):
-    data = {
-        'groupid': -1999999,
+def groupstats(groupid):
+    data = stats.getData(groupid, request)
+    users = stats.getUser(data)
+
+    out = {
+        'groupid': data['chat_id'],
         'groupname': 'idb with friends',
-        'scalestart': '2019-8-01',
-        'scaleend': '2019-8-01',
-        'btnmonth': True,
-        'linelabels': ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-        'users': [
-            {
-                'name': 'SWAGNER',
-                'rank':1,
-                'linedata': [300,500,44,321,123,452,5],
-                'posts': 1237,
-                'type': {'gif': 4, 'messages': 9,'commands': 3,},
-                'textlen':40000,
-            }, {
-                'name': 'SWAGNER#2',
-                'rank':2,
-                'linedata': [1300,520,443,31,1123,952,80],
-                'posts': 3237,
-                'type': {'gif': 20, 'messages': 2,'commands': 0,},
-                'textlen':78000,
-            },
-        ],
-        'chart1': [['SWAGNER', 30],['SWAGNER#2', 70],],
-        'chart2': [['gif', 2],['commands', 6],['messages', 9],],
-        'chart3': [['SWAGNER', 40000],['SWAGNER#2', 78000],],
+        'scalestart': data['start'],
+        'scaleend': data['end'],
+        'btnday': True,
+        'linelabels': ['%02d:00' % i for i in range(0,24)],
+        'linedata': stats.getLinedata(data, users),
+        'users': users,
+        'chart1': stats.getChart1(data),
+        'chart2': stats.getChart2(data),
+        'chart3': stats.getChart3(data),
     }
-    return render_template('group_stats.html', **data)
+    return render_template('group_stats.html', **out)
+
+@app.route('/sensordata/put', methods=['POST'])
+@tele_util.tryAndLogError
+def put_sensor_data():
+    json = request.get_json()
+    data = {'sensor': json['sensor'],
+            'time': time.strftime('%Y-%m-%d %H:%M:%S'),
+            'temp': int(json['temp']),
+            'humidity': int(json['humidity']),}
+    sql = 'insert into sensor_data value (%(sensor)s, %(time)s, %(temp)s, %(humidity)s);'
+    tele_util.executeSQL(sql, data)
+    return "OK"
+
+
+
+

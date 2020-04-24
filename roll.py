@@ -21,13 +21,14 @@ def getrol (adv=None, prn=True):
     return retfun
 
 def roll(term, out=[], adv=False):
+    out=[]
     sum = 0
     itr = p_dice.finditer(term)
     for m in itr:
         rol_adv = (True if adv or '*' == m.group(4) else False if '~' == m.group(4) else None)
         f = getrol(rol_adv)
         val, txt = rslvroll(f, m.group(1), m.group(2), m.group(3))
-        out += txt 
+        out += txt
         sum += val
     itr = p_mod.finditer(term)
     mod=0

@@ -4,22 +4,22 @@
 
 {% block content %}
 	<section class="container" id="">
-		<h1>Statistics of group "{{groupname}}" </h1>
+		<h1>Statistics of group "{{groupid}}" </h1>
 	</section>
 	<section class="container" id="">
 		{% include 'set_scale.html' %}
 	</section>
-	
+
 	<section class="container" id="">
 		{% include 'linechart.html' %}
 	</section>
-	
+
 	<section class="container" id="">
 		{% include 'table.html' %}
 	</section>
-	
+
 	<section class="container" id="">
-		
+
 		<div class="row">
 			{% set titel = "Contribution in %" %}
 			{% set idx = 0 %}

@@ -10,6 +10,7 @@ import config
 import time
 import sys
 import urllib3
+import traceback
 from contextlib import closing
 from functools import lru_cache, wraps
 
@@ -58,8 +59,8 @@ def tryAndLogError(func):
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except Exception as e:
-            print(e, file=sys.stderr)
+        except Exception:
+            print(traceback.format_exc(), file=sys.stderr)
             return "OK"
     return wrapper
 
@@ -74,11 +75,15 @@ class MsgUtil(object):
     def __init__(self, bot, upd):
         self.bot=bot
         self.upd=upd
-        self.TXT_PATT='\/(\w*)(?:%s)?\s*(.*)' % bot.getMe()['username']
+        self.TXT_PATT='^\/(\w*)(?:%s)?\s*(.*)' % bot.getMe()['username']
+        self.hasmsg = True
+        if 'message' not in upd:
+            self.hasmsg = False
+            return
         self.cmd, self.txt  = self.paseText(upd)
 
     def paseText(self, upd):
-        if 'text' not in upd['message']:
+        if 'message' not in upd or 'text' not in upd['message']:
             return (None, None)
         m = re.search(self.TXT_PATT, upd["message"]["text"])
         if m == None:
@@ -171,7 +176,7 @@ def startBot(conf):
     bot.setWebhook(config.site+conf['hook'], max_connections=1)
     return bot
 
-@onlySysUser
+
 @catchKeyError
 def addFile(msg):
     upd=msg.upd
@@ -205,28 +210,37 @@ typ3s = {
 
 def updateMsgLog(upd):
     reply=upd['message'].get('reply_to_message', {}).get('message_id', 0)
-    length=len(upd['message'].get('text', '1'))
+    length=len(upd['message'].get('text', ''))
     typ3=next((key for key, val in typ3s.items() if upd['message'].get(val, None)), 'N')
     if typ3 == 't' and upd['message']['text'].startswith('/'):
         typ3 = 'c'
-    sql = """ insert into msglog
+    sql = '''
+    insert into msglog
     (msg_id, user_id, chat_id, reply, date, time, day, len, type)
-    values (%s,'%s','%s',%s,'%s','%s','%s',%s,'%s')
-    """ % (upd['message']['message_id'],upd['message']['from']['id'],upd['message']['chat']['id'] \
-           , reply,time.strftime('%Y-%m-%d'), time.strftime('%H:%M:%S'), time.strftime('%u'), length, typ3)
-    executeSQL(sql)
+    values (%s,%s,%s,%s,%s,%s,%s,%s,%s)
+    '''
+    data = (int(upd['message']['message_id']), upd['message']['from']['id']
+            , upd['message']['chat']['id'], reply,time.strftime('%Y-%m-%d') \
+            , time.strftime('%H:%M:%S'), time.strftime('%u') \
+            , int(length), typ3)
+    executeSQL(sql, data=data)
 
 @onceADay
-def syncUser(bot, chat_id):
-    sql = "select user_id from msglog where chat_id='%s' group by user_id;" % (chat_id)
+def syncUser(bot, chat_id=None):
+    if chat_id:
+        sql = "select chat_id, user_id from msglog where chat_id='%s' group by user_id, chat_id;" % (chat_id)
+    else:
+        sql = "select chat_id, user_id  from msglog group by user_id, chat_id;"
     for user in readSQL(sql):
-       user = bot.getChatMember(chat_id, user[0])['user']
-       for i in ['user_id','first_name','username','last_name']:
-           if not user.get(i):
-               user[i] = ''
-       sql = "delete from usr where user_id=%(user_id)s;"
-       executeSQL(sql, data={'id': user})
-       sql = "insert into usr (user_id,first_name,username,last_name) values (%(id)s,%(first_name)s,%(username)s,%(last_name)s);"
-       executeSQL(sql, data=user)
-
+        user = bot.getChatMember(user[0], user[1])['user']
+        for i in ['id','first_name','username','last_name']:
+            if not user.get(i):
+                user[i] = ''
+        try:
+            sql = "delete from usr where user_id=%(id)s;"
+            executeSQL(sql, data=user)
+            sql = "insert into usr (user_id,first_name,username,last_name) values (%(id)s,%(first_name)s,%(username)s,%(last_name)s);"
+            executeSQL(sql, data=user)
+        except:
+            print(user)
 
